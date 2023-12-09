@@ -3,6 +3,7 @@ package com.epa.bank.account.service.handlers.bus;
 
 import com.epa.bank.account.service.RabbitConfig;
 import com.epa.bank.account.service.models.dto.EventDto;
+import com.epa.bank.account.service.usecase.WriteErrorUseCase;
 import com.epa.bank.account.service.usecase.WriteLogUseCase;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +21,13 @@ public class RabbitMqMessageConsumer implements CommandLineRunner {
     @Autowired
     private Gson gson;
     
+    private final WriteErrorUseCase writeErrorUseCase;
+
     private final WriteLogUseCase writeLogUseCase;
 
     @Autowired
-    public RabbitMqMessageConsumer(WriteLogUseCase writeLogUseCase) {
+    public RabbitMqMessageConsumer(WriteErrorUseCase writeErrorUseCase, WriteLogUseCase writeLogUseCase) {
+        this.writeErrorUseCase = writeErrorUseCase;
         this.writeLogUseCase = writeLogUseCase;
     }
 
@@ -40,7 +44,16 @@ public class RabbitMqMessageConsumer implements CommandLineRunner {
                 })
                 .subscribe();
 
+        receiver.consumeAutoAck(RabbitConfig.QUEUE_NAME)
+                .map(message -> {
+                    String mensaje = new String(message.getBody());
 
+                    writeErrorUseCase.apply(mensaje).subscribe();
+
+                    System.out.println("Error:" + mensaje);
+                    return mensaje;
+                })
+                .subscribe();
 
    }
 }

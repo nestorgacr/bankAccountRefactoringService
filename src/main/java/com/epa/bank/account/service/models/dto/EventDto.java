@@ -30,4 +30,12 @@ public class EventDto {
     public void setData(Object data) {
         this.data = data;
     }
+
+    @Override
+    public String toString() {
+        return "EventDto{" +
+                "mensaje='" + mensaje + '\'' +
+                ", data=" + data +
+                '}';
+    }
 }
